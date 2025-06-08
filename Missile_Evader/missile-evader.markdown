@@ -1,7 +1,7 @@
 ---
 layout: page
 title: Missile Evader
-permalink: /missile_evader/
+permalink: /missile-evader/
 ---
 
 Overview
