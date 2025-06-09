@@ -289,7 +289,7 @@ The desired angle of attack is then calculated based on the acceleration command
 to be at which will then generate the proper lift. I did attempt to force a limited angle of attack so that the missile 
 is a little bit limited on how much it can maneuver, but normally this would be set based on the aerodynamic properties so you don't stall.
 
-Finally it goes to the PID controller to generate a vector control which ranges from 0 to 1 in magnitude. This then 
+It then goes to the PID controller to generate a vector control which ranges from 0 to 1 in magnitude. This then 
 tells the GenerateControlTorque how much torque to apply. 
 
 We apply the aerodynamic forces (lift and drag), and then the torque commanded. Then we're done!
@@ -347,7 +347,7 @@ which push the body along its sides, while conserving energy (no thrust, minimal
 
 The PID controller is a regular PID controller with some normalization. PID stands for Proportional, Integral, Derivative and it's 
 a standard controller for closed loop systems where we give feedback based on the difference between the desired and actual output.
-In this case, the PID controller is set to be a maximum value of one, similar to a joystick but in dimensions.
+In this case, the PID controller is set to be a maximum value of one, similar to a joystick but in 3 dimensions.
 
 {% highlight C# %}
 
@@ -402,9 +402,10 @@ We modulate the "tailArea" using the control to reduce the torque when we don't 
     }
 {% endhighlight %}
 
-Not the best phsyics here either, and I see that wingArea is not used because I grabbed "area" from somewhere else.
-I need to retest this, but this also needs to be moved out into its own component with aero properties and aero force methods.
-It's calculation for lift and drag are based on some flat-sheet aerodynamic approximations, where we have a stall-out
+Not the best physics here either, and I see that wingArea is not used because I grabbed "area" the object constructor.
+I need to retest how the area impacts our ability to guide, 
+but this also needs to be moved out into its own component with aero properties and aero force methods.
+Its calculation for lift and drag are based on some flat-sheet aerodynamic approximations, where we have a stall-out
 case with high angle of attack with the more aggressive drag and diminished lift.
 
 All these methods could be moved into different components. It's even possible to make an ECS system out of this if we end up with
@@ -465,10 +466,11 @@ I'm not done with code yet, we still gotta explode! It's similar to exploding th
 The damage part is more insteresting. We hold a reference to our target to damage its health.
 The calculation for the damage is based on the distance we are from the target. If the energy of the blast
 is perfectly spherical, it would be 1/r^2, but if we assume some directionality to the blast, it could be 1/r
-or even ln(r) dropoff. This is really more about "feels" though and I will change it however.
+or even ln(r) dropoff. This is really more about "feels" though and I will change it however. 
+Besides, energy != damage and I can do whatever I want! Not everything is physics!
 
-One last function: LoopAudio. This guy is meant to play audio with Unity, and has 3D spatial falloff and Doppler.
-The sound is just a bleep, pulled from somewhere, but the code plays the sound at a faster and faster rate
+One last function: LoopAudio. This guy is meant to play audio with Unity's audio player which has 3D spatial falloff and Doppler.
+The sound is just a bleep, pulled from some "Create With Code" assets, but the code plays the sound at a faster and faster rate
 as the missile gets closer. Watch out!
 
 {% highlight C# %}
