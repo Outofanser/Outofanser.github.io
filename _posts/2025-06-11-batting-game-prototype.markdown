@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "Batting Game Prototype Blog Post #1"
-date:   2025-06-08 22:00:00 -0500
+date:   2025-06-11 22:00:00 -0500
 categories: Batting Game update
 ---
 
