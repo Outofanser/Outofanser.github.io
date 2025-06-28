@@ -10,6 +10,8 @@ Missile Evader (title not final) is a personal Unity project to make a small gam
 This project was started as part of the self-study portion of the Unity Learn with Code series.
 It's mostly a sandbox for me to apply my physics background while learning flight dynamics and Unity physics, as well as other basic Unity gameplay features.
 
+[Early Demo](https://play.unity.com/en/games/e7c47b99-b777-4a4a-968b-e232121982e1/missile-evader)
+
 <img src="/Missile_Evader/images/gameView.png" alt="Gameplay" title="Gameplay so far"/> 
 --------------
 
@@ -94,5 +96,7 @@ Todo
 
 4. Add UI to display speed, altitude (eventually, add artificial horizon)
 
+
+<img src="/Missile_Evader/images/CameraRotation.png" alt="Inbound" title="Missiles Inbound with camera rotation"/>
 
 [jekyll-organization]: https://github.com/jekyll

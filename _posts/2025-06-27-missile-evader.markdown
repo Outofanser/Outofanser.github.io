@@ -10,7 +10,7 @@ Now includes Fun!
 
 Welcome back! Today is a great update for Missile Evader because today we're adding fun!
 
-Well, today we're addinng flight controls to the player so they too can fly around through the air instead of floating through it
+Well, today we're adding flight controls to the player so they too can fly around through the air instead of floating through it
 at a constant speed...
 
 Last update, I reformatted the missile to have an aerodynamics model, and made it abstract so I could apply much of the same
@@ -21,11 +21,16 @@ I also changed the input system for the player to the new(ish?) input system fro
 from multiple types of controllers (such as mouse and keyboard and a gamepad).
 
 The player camera also got some tweaks! Instead of just following the player at the same exact, sometimes dizzying angle, we can instead
-follow the player's *momentum*. We couldn't do that before because it had no such thing, but now it has aerodynamics the angle of the plane
-and the direction of motion are not 100% tied together. This let's the player *feel* the motion better. I also added look actions on the gamepad
+follow the player's *momentum*. We couldn't do that before because it had no such thing, but now that it has aerodynamics the angle of the plane
+and the direction of motion are not 100% tied together. This camera angle let's the player *feel* the motion better. I also added look actions on the gamepad
 so you can look over your shoulder! Not implemented for mouse and keyboard yet, I haven't figured that one out.
 
-The player aerodynamics still needs some tweaking and a few more features, and the code could use some refactoring again now that I have a better grasp of flight dynamics. Even so, the game is now what I would call playable. It doesn't have any gameplay mechanics but it is fun to fly around and get blown out of the sky! So before I get back to boring stuff, it's time to review what I've done so far.
+
+The player aerodynamics still needs some tweaking and a few more features, and the code could use some refactoring again now that I have a better grasp of flight dynamics. Even so, the game is now what I would call playable. It doesn't have any gameplay mechanics but it is fun to fly around and get blown out of the sky!
+
+You can try an [Early Demo](https://play.unity.com/en/games/e7c47b99-b777-4a4a-968b-e232121982e1/missile-evader) here!
+
+So before I get back to boring stuff, it's time to review what I've done so far.
 
 Code
 ====
@@ -101,7 +106,7 @@ on the dynamic pressure, control surface area, and control surface distance from
 
 The max torque is multiplied by the coefficient to get the max controlled torque. We get the attitude moment
 from this torque multiplied by the control signals in the pitch, yaw, and roll dimensions, each of which range from -1 to 1.
-These moments are due to the air indicient on the deflected control surface creating a force. I assume aa lift force
+These moments are due to the air indicient on the deflected control surface creating a force. I assume a lift force
 that applies a torque, but I do not include drag. 
 
 I also assumed that the air is always traveling stright on toward the control surface. But if the aircraft is rotating
@@ -115,7 +120,7 @@ the control surface deflections.
     attitudeMoment_local.z = attitudeControl.z * maxControlRollTorque;
 {% endhighlight %}
 
-Next I calculate the damping moments. When I was writing this code, I stopoped there and reviewed how things were flying.
+Next I calculate the damping moments. When I was writing this code, I stopped there and reviewed how things were flying.
 I was able to have momentum and turning but it didn't feel right. I would yaw, but then I would just keep accelerating my turn.
 Then when I let go, I would just keep going in circles. That's not right! And that's because we should have damping.
 
@@ -124,7 +129,7 @@ adds to the air speed acting on the rotating surfaces, which means our dynamic p
 means an additional force is acting on the surface, which means there's a torque or moment acting on the plane
 due to this rotation.
 
-If the force is acting on a surface is acting at a distance `b` (on average) with rotation `w`, then the change in velocity
+If the force on a surface is acting at a distance `b` (on average) with rotation `w`, then the change in velocity
 acting on the surface is `bw` acting perpendicular to the velocity. The angle of the new velocity is `sin a = bw / V` where
 `V` is the air speed. For small angles, this means the effective attack angle of the rotating surface is `a = bw / V`.
 
@@ -146,8 +151,8 @@ Then, it will stop rotating after control is returned to zero. Let's see how thi
 
 First we define a rotation to go from the world frame to the local frame. We need to do this to make our calculation in the local frame.
 Each aero moment is a damping moment, and thus the negative sign on each term. The `2f * Mathf.PI` term is the familiar coefficient I've been using from the flat-sheet aerodynamics assumption
-that I've been abusing. the `a = bw/V` term is e.g. ` m_tailDistance * (worldToLocalTransform * m_body.angularVelocity).x / m_velocity.magnitude` where I had to convert the angular velocity to local coordinates.
-Finally we multply this by the corresponding torque acting at that attack angle e.g. `maxPitchTorque`. In some instances I need to calculate a different torque than what I used for the control surfaces, because
+that I've been abusing. The `a = bw/V` term is e.g. `m_tailDistance * (worldToLocalTransform * m_body.angularVelocity).x / m_velocity.magnitude` where I had to convert the angular velocity to local coordinates.
+We multply this by the corresponding torque acting at that attack angle e.g. `maxPitchTorque`. In some instances I need to calculate a different torque than what I used for the control surfaces, because
 for example the whole plane body acts to resist the yaw motion and the wings resist the roll.
 
 The `Mathf.Cos(attackAngle)` term is a correction on the assumption that the angle of attack was perpendicular to the rotation, which is not necessarily the case. However,
@@ -165,7 +170,7 @@ Furthermore, the tail can be adjusted to "trim" the plane so that the neutral an
 Engineering is cool!
 
 Well, I'm not that cool yet. The center of pressure is for next time. And this calls for another refactoring of the code. First, I think that all the forces and torques should be handled by the base class,
-with the concrete classes (plane and missile aero) should just be data and knobs that set the relevant lift, drag, and moment coefficients and their respective surfaces and lever arm constants.
+with the concrete classes (plane and missile aero) handling data and knobs that set the relevant lift, drag, and moment coefficients and their respective surfaces and lever arm constants.
 Then, we can add center of lift.
 
 We could go even further and make an aero model for each module of the plane. Wing, tail, body... then have the aero model apply all their forces and moments together while keeping a reference to their distances
@@ -180,7 +185,7 @@ We've looked at this code before, but we have to make changes to get it to work 
 Let's open up the PlayerMovement method which has been renamed to ApplyPlayerInput
 
 {% highlight C# %}
-    void PlayerMovement()
+    void ApplyPlayerInput()
     {
         // get inputs to attitude controls
         Vector3 playerAttitudeInput = new Vector3(-Input.GetAxis("Pitch"), -Input.GetAxis("Yaw"), -Input.GetAxis("Roll"));
@@ -235,10 +240,10 @@ The attitudeAction controls yaw and pitch in x and y respectively, and the yawAc
 {% endhighlight %}
 
 This is similar to what I had before, but I have to jumble the action inputs around to get the right values for the playerAttitudeInput.
-THe attideAction is a Vector2 for a left thumbstick or wasd control, where the yawAction is a float which ranges from -1 to 1 controlled by the
+The attitudeAction is a Vector2 for a left thumbstick or wasd control, where the yawAction is a float which ranges from -1 to 1 controlled by the
 left and right triggers or q e.
 
-Also, I clamed the x component, i.e. pitch. This is for two reasons. First, it's a bandaid for poor tuning as this limits the amount of pitch you can give to the plane
+Also, I clamped the x component, i.e. pitch. This is for two reasons. First, it's a bandaid for poor tuning as this limits the amount of pitch you can give to the plane
 and the plane still pitches *very* fast, so fast you can easily go into a stall with a simple hard flick of the stick. However, I do want the max pitch to be fast so I can
 add a button later that will allow the player to unlock the clamp and effectively *drift* the plane by pitching hard. Cool! Or it would be if it was done :)
 
@@ -268,6 +273,8 @@ Then we apply the lookInput (also a Vector2) to rotate the camera around the pit
 The angles defined are the max angles we can rotate the camera, which for the vertical is 90 degrees and for the horizontal it is 170 degrees, so pretty
 far over the shoulder but not directly behind. Cool!
 
+<img src="/Missile_Evader/images/CameraRotation.png" alt="rotation" title="Camera rotation to see certain doom" width="450" />
+
 But this next part is double-cool. I do my familiar trick to get the attack angle of the plane (the angle between the plane's attitude and actual velocity)
 as well as the axis of rotation. Then I apply the rotation to the player camera. These rotations must be about the plane's transform.position so
 that we keep the camera at the same distance looking at the plane.
@@ -276,13 +283,16 @@ What the attack angle rotation does is it places the camera in line with our vel
 It gievs the player much better feedback about how hard they're turning and where they're moving. And it looks cool! Also, if you do lose control
 and stall out, the camera will show you tumbling down like a rock :)
 
+<img src="/Missile_Evader/images/AttackAngleCamera.png" alt="attack" title="Attack Angle Camera" width="450" />
+
 The camera rotation and player inputs are applied each update, and I won't show the code here, just trust. The player input does not need to be on the FixedUpdate
 because we are merely setting the AeroModel's controls on each update, then the aero model will effect those controls on the FixedUpdate.
 
 That about does it for this update! There's missiles flying and planes gliding now. There are no points, collectables, or UI yet but the "game" is still pretty fun to mess with.
 The missiles are dodgeable but it comes at a cost of speed and it's a limited resource.
 
-You can try the game (or whatever the latest version of it is) [here]. Have fun! Just know that almost every aspect of it it still up to change.
+You can try the game (or whatever the latest version of it is) [here](https://play.unity.com/en/games/e7c47b99-b777-4a4a-968b-e232121982e1/missile-evader). 
+Have fun! Just know that almost every aspect of it it still up to change.
 
 Until next time,
 
