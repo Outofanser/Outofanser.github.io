@@ -10,6 +10,8 @@ Missile Evader (title not final) is a personal Unity project to make a small gam
 This project was started as part of the self-study portion of the Unity Learn with Code series.
 It's mostly a sandbox for me to apply my physics background while learning flight dynamics and Unity physics, as well as other basic Unity gameplay features.
 
+[Early Demo](https://play.unity.com/en/games/e7c47b99-b777-4a4a-968b-e232121982e1/missile-evader)
+
 <img src="/Missile_Evader/images/gameView.png" alt="Gameplay" title="Gameplay so far"/> 
 --------------
 
@@ -43,11 +45,11 @@ missile and player flight to feel good and for dodging missiles to be fun. I am 
 Status
 ======
 
-1. Player controls are very basic and not physics based. Just there for testing with a constant speed and turn rates.
+1. (UPDATE) Player has an aerodynamic model, but it's not tuned and is missing some features. It also features
+a dynamic camera that follows player momentum and has a lookInput control.
 
-2. Missiles are much more along, but needs code refactoring and balance adjustments. The missiles include aerodynamics, 
-navigation (acceleration commands) and a PID controller to execute. But there's little to control how well it can track its target,
-and right now they are very hit-or-miss and not in a fun way. What it needs is a delay between command and actuation, i.e. an auto-pilot time delay.
+2. Missiles are much more along, but need balance adjustments. The missiles include aerodynamics, 
+navigation (acceleration commands) and a PID controller to execute.
 
 3. There are no powerups or pickups or a real sky or a real ground. Just placeholder assets, though I'm proud of my prototype missile.
 
@@ -57,31 +59,27 @@ I think I will keep this as some sort of feature.
 #### Aero Forces Code Snippet
 <figure tile="AeroForces Code snippet">
 {% highlight C# %}
-    Vector3 GenerateAeroForces(Vector3 forward, Vector3 missileVelocity, float wingArea)
+    virtual public Vector3 CalculateAeroForces()
     {
+        Vector3 body2velAngle = Vector3.Cross(m_body.transform.forward, m_velocity);
+        Vector3 liftDirection = Vector3.Cross(m_velocity, body2velAngle).normalized;
 
-        Vector3 temp1 = Vector3.Cross(forward, missileVelocity);
-        Vector3 temp2 = Vector3.Cross(missileVelocity, temp1);
-        Vector3 lift_direction = temp2.normalized;
+        float attackAngle = Vector3.Angle(m_body.transform.forward, m_velocity);
 
-        float vel = missileVelocity.magnitude;
-        float dynamicPressure = 0.5f * rho * vel * vel;
-        attackAngle = Vector3.Angle(forward, missileVelocity);
+        float liftCoefficient = 2f * Mathf.PI * attackAngle * Mathf.Deg2Rad;
+        float dragCoefficient = 1f * Mathf.Pow(attackAngle * Mathf.Deg2Rad, 2f);
 
-        float lift_coefficient = 2f * Mathf.PI * attackAngle * Mathf.Deg2Rad;
-        float drag_coefficient = 1f * Mathf.Pow(attackAngle * Mathf.Deg2Rad, 2f);
-        //float moment_coefficient = 0.01f * attackAngle * Mathf.Deg2Rad;
-        if (attackAngle > 12)
+        if (attackAngle > m_stallAoA_deg) // Stalling condition
         {
-            lift_coefficient = Mathf.Sin(2f * attackAngle * Mathf.Deg2Rad);
-            drag_coefficient = 1f - Mathf.Cos(2f * attackAngle * Mathf.Deg2Rad);
+            liftCoefficient = Mathf.Sin(2f * attackAngle * Mathf.Deg2Rad);
+            dragCoefficient = 1f - Mathf.Cos(2f * attackAngle * Mathf.Deg2Rad);
         }
 
 
-        Vector3 lift_force = lift_direction * lift_coefficient * dynamicPressure * area;
-        Vector3 drag_force = -missileVelocity.normalized * drag_coefficient * dynamicPressure * area;
+        Vector3 liftForce = liftDirection * liftCoefficient * DynPressure * WingArea;
+        Vector3 dragForce = -m_velocity.normalized * dragCoefficient * DynPressure * WingArea;
 
-        return lift_force + drag_force;
+        return liftForce + dragForce; // in world frame
     }
 {% endhighlight %}
 <figcaption>Code to Generate the aerodynamic forces -- needs refactoring and some minor changes</figcaption>
@@ -89,12 +87,16 @@ I think I will keep this as some sort of feature.
 
 Todo
 ====
-1. Convert to Unity 6
 
-2. Apply auto-pilot delay to missile controller
+1. More aerodynamics code refactoring - get the forces and moments organized
 
-3. Refactor missile controller and abstract out aerodynamics module
+2. Add center of lift to aero model.
 
-4. Apply aerodynamics and physics based controls to player (easier said than done).
+3. Add thrust and fuel to player
+
+4. Add UI to display speed, altitude (eventually, add artificial horizon)
+
+
+<img src="/Missile_Evader/images/CameraRotation.png" alt="Inbound" title="Missiles Inbound with camera rotation"/>
 
 [jekyll-organization]: https://github.com/jekyll
